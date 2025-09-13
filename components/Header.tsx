@@ -1,7 +1,7 @@
 import React from 'react';
 import type { View } from '../types';
 import { View as ViewEnum } from '../types';
-import { SignalStickLogoIcon, ChartIcon, WrenchIcon, BookIcon, StoreIcon, LogOutIcon, ClipboardListIcon } from './ui/Icons';
+import { SignalStickLogoIcon, ChartIcon, WrenchIcon, BookIcon, StoreIcon, LogOutIcon, ClipboardListIcon, BoltIcon } from './ui/Icons';
 
 interface HeaderProps {
   currentView: View;
@@ -46,6 +46,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onLogout }
               <NavItem label="Dashboard" view={ViewEnum.DASHBOARD} currentView={currentView} onClick={setCurrentView} Icon={ChartIcon} />
               <NavItem label="Strategy Builder" view={ViewEnum.BUILDER} currentView={currentView} onClick={setCurrentView} Icon={WrenchIcon} />
               <NavItem label="Paper Trading" view={ViewEnum.PAPER_TRADING} currentView={currentView} onClick={setCurrentView} Icon={ClipboardListIcon} />
+              <NavItem label="Live Trading" view={ViewEnum.LIVE_TRADING} currentView={currentView} onClick={setCurrentView} Icon={BoltIcon} />
               <NavItem label="Learn" view={ViewEnum.LEARN} currentView={currentView} onClick={setCurrentView} Icon={BookIcon} />
               <NavItem label="Marketplace" view={ViewEnum.MARKETPLACE} currentView={currentView} onClick={setCurrentView} Icon={StoreIcon} />
             </nav>

@@ -3,6 +3,7 @@ export enum View {
   BUILDER = 'BUILDER',
   BACKTEST = 'BACKTEST',
   PAPER_TRADING = 'PAPER_TRADING',
+  LIVE_TRADING = 'LIVE_TRADING',
   LEARN = 'LEARN',
   MARKETPLACE = 'MARKETPLACE',
 }
@@ -17,6 +18,12 @@ export interface Strategy {
   };
 }
 
+export interface Trade {
+  type: 'buy' | 'sell';
+  day: number;
+  value: number;
+}
+
 export interface BacktestResult {
   totalReturn: number;
   winRate: number;
@@ -24,6 +31,7 @@ export interface BacktestResult {
   maxDrawdown: number;
   profitFactor: number;
   performanceData: { name: string; value: number }[];
+  trades: Trade[];
 }
 
 export interface Achievement {
@@ -55,5 +63,16 @@ export interface PaperStrategy {
     winRate: number;
     trades: number;
     isActive: boolean;
+    performanceData: { name: string; value: number }[];
+}
+
+export interface LiveStrategy {
+    id: string;
+    name: string;
+    pnl: number;
+    winRate: number;
+    trades: number;
+    isActive: boolean;
+    brokerStatus: 'Connected' | 'Disconnected';
     performanceData: { name: string; value: number }[];
 }

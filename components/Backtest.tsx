@@ -1,13 +1,15 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { Strategy, BacktestResult } from '../types';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot } from 'recharts';
+import type { Strategy, BacktestResult, Trade } from '../types';
 import { optimizeStrategy } from '../services/geminiService';
+import { BoltIcon } from './ui/Icons';
 
 interface BacktestProps {
   strategy: Strategy | null;
   result: BacktestResult | null;
   setResult: (result: BacktestResult | null) => void;
+  onDeploy: (strategy: Strategy, result: BacktestResult) => void;
 }
 
 const MetricCard: React.FC<{ label: string; value: string; colorClass?: string }> = ({ label, value, colorClass = 'text-primary' }) => (
@@ -36,7 +38,28 @@ const RiskIndicator: React.FC<{ drawdown: number }> = ({ drawdown }) => {
     );
 }
 
-const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult }) => {
+const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        const trade = data.trade as Trade | undefined;
+
+        return (
+            <div className="bg-surface p-3 rounded-lg border border-border text-sm">
+                <p className="label text-text-secondary">{`${label}`}</p>
+                <p className="intro text-text-primary">{`Portfolio Value : ₹${payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</p>
+                {trade && (
+                     <p className={`font-bold ${trade.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                        {trade.type === 'buy' ? 'Buy' : 'Sell'} @ ₹{trade.value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                )}
+            </div>
+        );
+    }
+    return null;
+};
+
+
+const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult, onDeploy }) => {
   const [isBacktesting, setIsBacktesting] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationSuggestion, setOptimizationSuggestion] = useState<string | null>(null);
@@ -48,10 +71,27 @@ const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult }) => {
     setError(null);
     // Simulate API call
     setTimeout(() => {
-      const perfData = Array.from({ length: 50 }, (_, i) => ({
-        name: `Day ${i + 1}`,
-        value: 10000 * (1 + (Math.random() - 0.45) * 0.02 * (i + 1)),
-      }));
+      let currentValue = 10000;
+      const trades: Trade[] = [];
+      const perfData = Array.from({ length: 50 }, (_, i) => {
+        const change = (Math.random() - 0.45) * 0.03;
+        currentValue *= (1 + change);
+        const point = {
+          name: `Day ${i + 1}`,
+          value: currentValue,
+          trade: undefined as Trade | undefined,
+        };
+        
+        // Randomly generate some trades
+        if (Math.random() > 0.85 && i > 2 && i < 48) {
+            const tradeType = Math.random() > 0.5 ? 'buy' : 'sell';
+            const trade: Trade = { type: tradeType, day: i, value: currentValue };
+            trades.push(trade);
+            point.trade = trade;
+        }
+
+        return point;
+      });
 
       setResult({
         totalReturn: Math.round((perfData[perfData.length-1].value / 10000 - 1) * 10000) / 100,
@@ -60,6 +100,7 @@ const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult }) => {
         maxDrawdown: 10 + Math.random() * 25,
         profitFactor: 1.2 + Math.random() * 1.5,
         performanceData: perfData,
+        trades: trades,
       });
       setIsBacktesting(false);
     }, 1500);
@@ -101,8 +142,18 @@ const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult }) => {
   return (
     <div className="space-y-8">
         <div>
-            <h2 className="text-3xl font-bold tracking-tight text-text-primary">Backtest Report: <span className="text-primary">{strategy.name}</span></h2>
-            <p className="mt-1 text-text-secondary">{strategy.description}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight text-text-primary">Backtest Report: <span className="text-primary">{strategy.name}</span></h2>
+                    <p className="mt-1 text-text-secondary">{strategy.description}</p>
+                </div>
+                {result && !isBacktesting && (
+                    <button onClick={() => onDeploy(strategy, result)} className="mt-4 sm:mt-0 flex items-center justify-center space-x-2 w-full sm:w-auto bg-primary text-background font-bold py-3 px-6 rounded-md hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+                        <BoltIcon className="w-5 h-5" />
+                        <span>Deploy Live</span>
+                    </button>
+                )}
+            </div>
         </div>
 
         {isBacktesting && (
@@ -128,22 +179,40 @@ const Backtest: React.FC<BacktestProps> = ({ strategy, result, setResult }) => {
                 </div>
 
                 <div className="bg-surface p-6 rounded-lg border border-border">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
                        <h3 className="text-xl font-bold text-text-primary">Performance Chart</h3>
-                       <RiskIndicator drawdown={result.maxDrawdown} />
+                       <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span className="text-xs text-text-secondary">Buy</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <span className="text-xs text-text-secondary">Sell</span>
+                            </div>
+                            <RiskIndicator drawdown={result.maxDrawdown} />
+                       </div>
                     </div>
                     <div className="h-96 w-full">
                         <ResponsiveContainer>
                             <LineChart data={result.performanceData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#3a3a3a" />
                                 <XAxis dataKey="name" stroke="#a0a0a0" tick={{ fontSize: 12 }} />
-                                <YAxis stroke="#a0a0a0" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`}/>
-                                <Tooltip 
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #3a3a3a' }} 
-                                    formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, "Portfolio Value"]}
-                                />
+                                <YAxis stroke="#a0a0a0" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`} domain={['dataMin', 'dataMax']}/>
+                                <Tooltip content={<CustomTooltip />} />
                                 <Legend />
                                 <Line type="monotone" dataKey="value" name="Portfolio Value" stroke="#2bd94a" strokeWidth={2} dot={false} />
+                                {result.trades.map((trade, index) => (
+                                    <ReferenceDot 
+                                        key={index}
+                                        x={result.performanceData[trade.day]?.name} 
+                                        y={trade.value}
+                                        r={5}
+                                        fill={trade.type === 'buy' ? '#22c55e' : '#ef4444'}
+                                        stroke="#0a0a0a"
+                                        strokeWidth={1}
+                                    />
+                                ))}
                             </LineChart>
                         </ResponsiveContainer>
                     </div>

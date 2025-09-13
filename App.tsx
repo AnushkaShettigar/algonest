@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import type { Strategy, BacktestResult, PaperStrategy } from './types';
+import type { Strategy, BacktestResult, PaperStrategy, LiveStrategy } from './types';
 import { View } from './types';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -9,6 +9,7 @@ import Marketplace from './components/Marketplace';
 import Backtest from './components/Backtest';
 import Login from './components/Login';
 import PaperTrading from './components/PaperTrading';
+import LiveTrading from './components/LiveTrading';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -17,10 +18,11 @@ const App: React.FC = () => {
   const [backtestResult, setBacktestResult] = useState<BacktestResult | null>(null);
   const [followedStrategies, setFollowedStrategies] = useState<Set<string>>(new Set(['Steady Dividend Grower']));
   const [paperStrategies, setPaperStrategies] = useState<PaperStrategy[]>([]);
+  const [liveStrategies, setLiveStrategies] = useState<LiveStrategy[]>([]);
 
   useEffect(() => {
     // Initialize with some mock paper trading data
-    const mockData: PaperStrategy[] = [
+    const mockPaperData: PaperStrategy[] = [
       {
         id: 'strat-1',
         name: 'My Golden Cross',
@@ -58,7 +60,7 @@ const App: React.FC = () => {
         })),
       },
     ];
-    setPaperStrategies(mockData);
+    setPaperStrategies(mockPaperData);
   }, []);
 
   const handleSetStrategy = useCallback((strategy: Strategy | null) => {
@@ -99,6 +101,27 @@ const App: React.FC = () => {
       prev.map(s => s.id === strategyId ? { ...s, isActive: !s.isActive } : s)
     );
   }, []);
+  
+  const handleDeployLive = useCallback((strategy: Strategy, backtest: BacktestResult) => {
+    const newLiveStrategy: LiveStrategy = {
+      id: `live-${Date.now()}`,
+      name: strategy.name,
+      pnl: 0,
+      winRate: 0,
+      trades: 0,
+      isActive: true,
+      brokerStatus: 'Connected',
+      performanceData: [{ name: 'Start', value: 25000 }], // Start with a base value
+    };
+    setLiveStrategies(prev => [...prev, newLiveStrategy]);
+    setCurrentView(View.LIVE_TRADING);
+  }, []);
+  
+  const handleToggleLiveStrategy = useCallback((strategyId: string) => {
+    setLiveStrategies(prev => 
+      prev.map(s => s.id === strategyId ? { ...s, isActive: !s.isActive } : s)
+    );
+  }, []);
 
 
   const renderContent = () => {
@@ -108,9 +131,11 @@ const App: React.FC = () => {
       case View.BUILDER:
         return <StrategyBuilder onStrategyCreated={handleSetStrategy} />;
       case View.BACKTEST:
-        return <Backtest strategy={activeStrategy} result={backtestResult} setResult={setBacktestResult} />;
+        return <Backtest strategy={activeStrategy} result={backtestResult} setResult={setBacktestResult} onDeploy={handleDeployLive} />;
       case View.PAPER_TRADING:
         return <PaperTrading strategies={paperStrategies} onToggle={handleTogglePaperStrategy} />;
+      case View.LIVE_TRADING:
+        return <LiveTrading strategies={liveStrategies} onToggle={handleToggleLiveStrategy} />;
       case View.LEARN:
         return <Learn />;
       case View.MARKETPLACE:

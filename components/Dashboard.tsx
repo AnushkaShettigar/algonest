@@ -1,107 +1,122 @@
 import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import type { Achievement, PaperStrategy } from '../types';
-import { RocketIcon, ShieldIcon, TrophyIcon, WrenchIcon, BookIcon } from './ui/Icons';
-
-const achievements: Achievement[] = [
-  { name: 'First Strategy', description: 'You built your first trading strategy!', icon: WrenchIcon },
-  { name: 'Backtest Pro', description: 'Ran more than 10 backtests.', icon: ShieldIcon },
-  { name: 'Paper Trader', description: 'Completed a paper trading competition.', icon: TrophyIcon },
-  { name: 'Lifelong Learner', description: 'Completed 5 educational modules.', icon: BookIcon },
-  { name: 'Market Explorer', description: 'Followed a strategy from the marketplace.', icon: RocketIcon },
-];
-
-const generatePortfolioData = (days: number) => {
-    let value = 10000;
-    const data = [];
-    for (let i = 1; i <= days; i++) {
-        value *= (1 + (Math.random() - 0.48) * 0.015);
-        data.push({ name: `Day ${i}`, value: value });
-    }
-    return data;
-};
-
-const portfolioData = generatePortfolioData(90);
-
-const StatCard: React.FC<{ title: string; value: string; change?: string; onClick?: () => void }> = ({ title, value, change, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`bg-surface p-6 rounded-lg border border-border ${onClick ? 'cursor-pointer hover:border-primary transition-colors duration-200' : ''}`}
-    >
-        <p className="text-sm font-medium text-text-secondary">{title}</p>
-        <p className="text-3xl font-bold text-text-primary mt-1">{value}</p>
-        {change && <p className="text-sm text-primary mt-1">{change}</p>}
-    </div>
-);
-
-const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }) => (
-    <div className="bg-surface p-4 rounded-lg flex items-center space-x-4 border border-border hover:border-primary transition-colors duration-200">
-        <div className="bg-surface-light p-3 rounded-full">
-            <achievement.icon className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-            <h4 className="font-semibold text-text-primary">{achievement.name}</h4>
-            <p className="text-sm text-text-secondary">{achievement.description}</p>
-        </div>
-    </div>
-);
+import type { PaperStrategy } from '../types';
+import { TrendingUpIcon, TrendingDownIcon, ClipboardListIcon, AwardIcon } from './ui/Icons';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
 interface DashboardProps {
   paperStrategies: PaperStrategy[];
   onNavigate: () => void;
 }
 
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; }> = ({ title, value, icon }) => (
+    <div className="bg-surface p-6 rounded-lg border border-border">
+        <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-text-secondary">{title}</p>
+            {icon}
+        </div>
+        <div className="mt-2">
+            <h3 className="text-3xl font-bold text-text-primary">{value}</h3>
+        </div>
+    </div>
+);
+
 const Dashboard: React.FC<DashboardProps> = ({ paperStrategies, onNavigate }) => {
-  const activeStrategies = paperStrategies.filter(s => s.isActive).length;
   const totalPnl = paperStrategies.reduce((acc, s) => acc + s.pnl, 0);
-  const avgWinRate = paperStrategies.length > 0
-    ? paperStrategies.reduce((acc, s) => acc + s.winRate, 0) / paperStrategies.length
-    : 0;
+  const activeStrategies = paperStrategies.filter(s => s.isActive).length;
+  const totalTrades = paperStrategies.reduce((acc, s) => acc + s.trades, 0);
+  
+  const activePaperStrategy = paperStrategies.find(s => s.isActive);
+  const chartData = activePaperStrategy ? activePaperStrategy.performanceData : [];
+  
+  const topPerformer = [...paperStrategies].sort((a, b) => b.pnl - a.pnl)[0];
+  const worstPerformer = [...paperStrategies].sort((a, b) => a.pnl - b.pnl)[0];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-text-primary">Welcome back, Team RAS</h2>
-        <p className="mt-1 text-text-secondary">Your daily trading signals and performance overview.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-text-primary">Dashboard</h2>
+        <p className="mt-1 text-text-secondary">Welcome back! Here's a summary of your trading activity.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total P/L (Paper)" value={`₹${totalPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} change="+2.1% this week" />
-        <StatCard title="Active Strategies" value={activeStrategies.toString()} change={`${paperStrategies.length} total`} onClick={onNavigate} />
-        <StatCard title="Win Rate (Avg)" value={`${avgWinRate.toFixed(1)}%`} change="-0.5% this week" />
-      </div>
-      
-      <div className="bg-surface p-6 rounded-lg border border-border">
-        <h3 className="text-2xl font-bold tracking-tight text-text-primary">Portfolio Performance</h3>
-        <div className="h-96 w-full mt-4">
-            <ResponsiveContainer>
-                <AreaChart data={portfolioData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2bd94a" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#2bd94a" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3a3a3a" />
-                    <XAxis dataKey="name" stroke="#a0a0a0" tick={{ fontSize: 10 }} interval={14} />
-                    <YAxis stroke="#a0a0a0" tickFormatter={(value) => `₹${Number(value/1000).toLocaleString('en-IN')}k`} />
-                    <Tooltip 
-                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #3a3a3a' }}
-                        formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, "Portfolio Value"]}
-                     />
-                    <Area type="monotone" dataKey="value" stroke="#2bd94a" fillOpacity={1} fill="url(#colorValue)" />
-                </AreaChart>
-            </ResponsiveContainer>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+            title="Total Paper P/L" 
+            value={`₹${totalPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={totalPnl >= 0 ? <TrendingUpIcon className="h-6 w-6 text-green-500" /> : <TrendingDownIcon className="h-6 w-6 text-red-500" />}
+        />
+        <StatCard 
+            title="Active Strategies" 
+            value={`${activeStrategies} / ${paperStrategies.length}`}
+            icon={<ClipboardListIcon className="h-6 w-6 text-primary" />}
+        />
+        <StatCard 
+            title="Total Trades" 
+            value={totalTrades.toLocaleString('en-IN')}
+            icon={<AwardIcon className="h-6 w-6 text-yellow-500" />}
+        />
+        <div className="bg-primary p-6 rounded-lg border border-primary flex flex-col items-center justify-center text-center">
+            <h3 className="font-bold text-background">Manage Your Strategies</h3>
+            <p className="text-sm text-primary-foreground mt-1 mb-3">View detailed performance and adjust your paper trades.</p>
+            <button 
+                onClick={onNavigate} 
+                className="bg-background text-primary font-bold py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors w-full"
+            >
+                Go to Paper Trading
+            </button>
         </div>
       </div>
-
-      <div>
-        <h3 className="text-2xl font-bold tracking-tight text-text-primary">Achievements</h3>
-        <p className="mt-1 text-text-secondary">Track your progress and unlock new badges.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {achievements.map((ach, index) => (
-            <AchievementCard key={index} achievement={ach} />
-          ))}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-surface p-6 rounded-lg border border-border">
+          <h3 className="text-xl font-bold text-text-primary">Portfolio Performance</h3>
+          <p className="text-sm text-text-secondary mb-4">Displaying performance for '{activePaperStrategy?.name || 'N/A'}'</p>
+          <div className="h-80 w-full">
+            {chartData.length > 0 ? (
+                 <ResponsiveContainer>
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#3a3a3a" />
+                        <XAxis dataKey="name" stroke="#a0a0a0" tick={{ fontSize: 12 }} />
+                        <YAxis stroke="#a0a0a0" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`} domain={['dataMin', 'dataMax']} />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #3a3a3a' }}
+                            labelStyle={{ color: '#a0a0a0' }}
+                            formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Value']}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="value" name="Portfolio Value" stroke="#2bd94a" strokeWidth={2} dot={false} />
+                    </LineChart>
+                </ResponsiveContainer>
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-text-secondary">No active strategy performance data to display.</p>
+                </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+            <div className="bg-surface p-6 rounded-lg border border-border">
+                <h4 className="font-bold text-text-primary mb-2">Top Performer</h4>
+                {topPerformer ? (
+                    <div>
+                        <p className="text-lg font-semibold text-primary">{topPerformer.name}</p>
+                        <p className={`text-2xl font-bold mt-1 ${topPerformer.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {topPerformer.pnl >= 0 ? '+' : ''}₹{topPerformer.pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                ) : <p className="text-text-secondary">No strategies found.</p>}
+            </div>
+             <div className="bg-surface p-6 rounded-lg border border-border">
+                <h4 className="font-bold text-text-primary mb-2">Needs Attention</h4>
+                 {worstPerformer && worstPerformer.pnl < 0 ? (
+                    <div>
+                        <p className="text-lg font-semibold text-primary">{worstPerformer.name}</p>
+                        <p className="text-2xl font-bold text-red-500 mt-1">
+                            ₹{worstPerformer.pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                ) : <p className="text-text-secondary">No underperforming strategies.</p>}
+            </div>
         </div>
       </div>
     </div>
