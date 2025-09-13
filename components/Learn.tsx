@@ -21,7 +21,7 @@ The defined sets of instructions are based on timing, price, quantity, or any ma
 - **Discipline:** By sticking to a pre-defined set of rules, algorithmic trading removes the emotional component of trading, such as fear and greed, which often leads to poor decisions.
 
 ### Getting Started
-The first step is to develop a trading idea into a concrete strategy with specific rules. For example, a simple strategy might be: "Buy 100 shares of a stock when its 50-day moving average crosses above the 200-day moving average (a 'Golden Cross')." With platforms like AlgoNest, you don't need to be a programmer to build and test these ideas. You can start with our visual builder or even describe your strategy in plain English.
+The first step is to develop a trading idea into a concrete strategy with specific rules. For example, a simple strategy might be: "Buy 100 shares of a stock when its 50-day moving average crosses above the 200-day moving average (a 'Golden Cross')." With platforms like Signal Stick, you don't need to be a programmer to build and test these ideas. You can start with our visual builder or even describe your strategy in plain English.
 `
   },
   {

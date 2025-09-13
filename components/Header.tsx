@@ -1,7 +1,7 @@
 import React from 'react';
 import type { View } from '../types';
 import { View as ViewEnum } from '../types';
-import { BotIcon, ChartIcon, WrenchIcon, BookIcon, StoreIcon, LogOutIcon, ClipboardListIcon } from './ui/Icons';
+import { SignalStickLogoIcon, ChartIcon, WrenchIcon, BookIcon, StoreIcon, LogOutIcon, ClipboardListIcon } from './ui/Icons';
 
 interface HeaderProps {
   currentView: View;
@@ -38,8 +38,8 @@ const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onLogout }
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
-            <BotIcon className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold text-text-primary tracking-wider">AlgoNest</h1>
+            <SignalStickLogoIcon className="h-10 w-10 text-primary" />
+            <h1 className="text-xl font-bold text-text-primary tracking-wider">Signal Stick</h1>
           </div>
           <div className="flex items-center space-x-2">
             <nav className="hidden md:flex items-center space-x-2">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BotIcon } from './ui/Icons';
+import { SignalStickLogoIcon } from './ui/Icons';
 
 interface LoginProps {
   onLogin: () => void;
@@ -21,13 +21,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-xl border border-border shadow-2xl shadow-primary/10">
         <div>
             <div className="flex justify-center">
-                <BotIcon className="h-12 w-12 text-primary" />
+                <SignalStickLogoIcon className="h-14 w-14 text-primary" />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-text-primary">
-                Welcome to AlgoNest
+                Welcome to Signal Stick
             </h2>
             <p className="mt-2 text-center text-sm text-text-secondary">
-                Nurturing Algo Trading.
+                Your signal to smarter trading.
             </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -41,7 +41,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-border bg-surface-light placeholder-text-secondary text-text-primary rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Email address (e.g., user@algonest.com)"
+                placeholder="Email address (e.g., user@signalstick.com)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

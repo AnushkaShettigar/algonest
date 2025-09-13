@@ -62,7 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({ paperStrategies, onNavigate }) =>
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-text-primary">Welcome back, Team RAS</h2>
-        <p className="mt-1 text-text-secondary">Nuturing algo trading one strategy at a time!</p>
+        <p className="mt-1 text-text-secondary">Your daily trading signals and performance overview.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -72,7 +72,7 @@ const Dashboard: React.FC<DashboardProps> = ({ paperStrategies, onNavigate }) =>
       </div>
       
       <div className="bg-surface p-6 rounded-lg border border-border">
-        <h3 className="text-2xl font-bold tracking-tight text-text-primary">Portfolio Performance (Till Date)</h3>
+        <h3 className="text-2xl font-bold tracking-tight text-text-primary">Portfolio Performance</h3>
         <div className="h-96 w-full mt-4">
             <ResponsiveContainer>
                 <AreaChart data={portfolioData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
